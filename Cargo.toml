@@ -16,10 +16,6 @@ bench = false
 name = "hw_bench"
 harness = false
 
-[[bench]]
-name = "bp_bench"
-harness = false
-
 [dependencies]
 displaydoc = "0.2.1"
 num-bigint = "0.4.0"

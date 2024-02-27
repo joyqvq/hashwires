@@ -160,19 +160,37 @@ pub fn hw_proof_gen_base4_max(c: &mut Criterion) {
 }
 
 /// HashWires proof generation benchmark for base16.
-pub fn hw_proof_gen_base16(c: &mut Criterion) {
+pub fn hw_proof_gen_base16_32_bits(c: &mut Criterion) {
     let max_number_bits = 32;
     let base = 16;
-    let value = BigUint::from_str_radix("1AB", 16).unwrap();
+    let value = BigUint::from_str_radix("100", 10).unwrap();
+
+    // 32 bits -> 4 bytes
+    let threshold = BigUint::from_bytes_be(&[1; 4]);
 
     let mut rng = OsRng;
     let mut seed = [0u8; 32];
     rng.fill_bytes(&mut seed);
     let secret = Secret::<Blake3>::gen(&seed, &value);
 
-    let threshold = BigUint::from_str_radix("CB", 16).unwrap();
+    c.bench_function("hw_proof_gen_base16 32 bit", |bench| {
+        bench.iter(|| secret.prove(base, max_number_bits, &threshold))
+    });
+}
 
-    c.bench_function("hw_proof_gen_base16", |bench| {
+pub fn hw_proof_gen_base16_64_bits(c: &mut Criterion) {
+    let max_number_bits = 64;
+    let base = 16;
+    // 64 bits -> 8 bytes
+    let value = BigUint::from_bytes_be(&[1; 8]);
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+
+    let mut rng = OsRng;
+    let mut seed = [0u8; 32];
+    rng.fill_bytes(&mut seed);
+    let secret = Secret::<Blake3>::gen(&seed, &value);
+
+    c.bench_function("hw_proof_gen_base16 64 bit", |bench| {
         bench.iter(|| secret.prove(base, max_number_bits, &threshold))
     });
 }
@@ -196,19 +214,37 @@ pub fn hw_proof_gen_base16_max(c: &mut Criterion) {
 }
 
 /// HashWires proof generation benchmark for base256 and a large issued value.
-pub fn hw_proof_gen_base256_max(c: &mut Criterion) {
-    let max_number_bits = 64;
+pub fn hw_proof_gen_base256_32_bits(c: &mut Criterion) {
+    let max_number_bits = 32;
     let base = 256;
-    let value = BigUint::from_str_radix("18446744073709551614", 10).unwrap();
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+    // 32 bits -> 4 bytes
+    let value = BigUint::from_bytes_be(&[1; 4]);
 
     let mut rng = OsRng;
     let mut seed = [0u8; 32];
     rng.fill_bytes(&mut seed);
     let secret = Secret::<Blake3>::gen(&seed, &value);
 
-    let threshold = BigUint::from_str_radix("18446744073709551613", 10).unwrap();
+    c.bench_function("hw_proof_gen_base256 32 bit", |bench| {
+        bench.iter(|| secret.prove(base, max_number_bits, &threshold))
+    });
+}
 
-    c.bench_function("hw_proof_gen_base256_max", |bench| {
+pub fn hw_proof_gen_base256_64_bits(c: &mut Criterion) {
+    let max_number_bits = 64;
+    let base = 256;
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+
+    // 64 bits -> 8 bytes
+    let value = BigUint::from_bytes_be(&[1; 8]);
+
+    let mut rng = OsRng;
+    let mut seed = [0u8; 32];
+    rng.fill_bytes(&mut seed);
+    let secret = Secret::<Blake3>::gen(&seed, &value);
+
+    c.bench_function("hw_proof_gen_base256 64 bit", |bench| {
         bench.iter(|| secret.prove(base, max_number_bits, &threshold))
     });
 }
@@ -290,21 +326,42 @@ pub fn hw_proof_verify_base4_max(c: &mut Criterion) {
 }
 
 /// HashWires proof verification benchmark for base16.
-pub fn hw_proof_verify_base16(c: &mut Criterion) {
+pub fn hw_proof_verify_base16_32_bits(c: &mut Criterion) {
     let max_number_bits = 32;
     let base = 16;
-    let value = BigUint::from_str_radix("1AB", 16).unwrap();
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+    // 32 bits -> 4 bytes
+    let value = BigUint::from_bytes_be(&[1; 4]);
 
     let mut rng = OsRng;
     let mut seed = [0u8; 32];
     rng.fill_bytes(&mut seed);
     let secret = Secret::<Blake3>::gen(&seed, &value);
 
-    let threshold = BigUint::from_str_radix("CB", 16).unwrap();
     let commitment = secret.commit(base, max_number_bits).unwrap();
     let proof = secret.prove(base, max_number_bits, &threshold).unwrap();
 
-    c.bench_function("hw_proof_verify_base16", |bench| {
+    c.bench_function("hw_proof_verify_base16 32 bits", |bench| {
+        bench.iter(|| commitment.verify(&proof, &threshold))
+    });
+}
+
+pub fn hw_proof_verify_base16_64_bits(c: &mut Criterion) {
+    let max_number_bits = 64;
+    let base = 16;
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+    // 64 bits -> 8 bytes
+    let value = BigUint::from_bytes_be(&[1; 8]);
+
+    let mut rng = OsRng;
+    let mut seed = [0u8; 32];
+    rng.fill_bytes(&mut seed);
+    let secret = Secret::<Blake3>::gen(&seed, &value);
+
+    let commitment = secret.commit(base, max_number_bits).unwrap();
+    let proof = secret.prove(base, max_number_bits, &threshold).unwrap();
+
+    c.bench_function("hw_proof_verify_base16 64 bits", |bench| {
         bench.iter(|| commitment.verify(&proof, &threshold))
     });
 }
@@ -330,24 +387,46 @@ pub fn hw_proof_verify_base16_max(c: &mut Criterion) {
 }
 
 /// HashWires proof generation benchmark for base256 and a large issued value.
-pub fn hw_proof_verify_base256_max(c: &mut Criterion) {
-    let max_number_bits = 64;
+pub fn hw_proof_verify_base256_32_bits(c: &mut Criterion) {
+    let max_number_bits = 32;
     let base = 256;
-    let value = BigUint::from_str_radix("18446744073709551614", 10).unwrap();
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+    let value = BigUint::from_bytes_be(&[1; 4]);
 
     let mut rng = OsRng;
     let mut seed = [0u8; 32];
     rng.fill_bytes(&mut seed);
     let secret = Secret::<Blake3>::gen(&seed, &value);
 
-    let threshold = BigUint::from_str_radix("18446744073709551613", 10).unwrap();
+
     let commitment = secret.commit(base, max_number_bits).unwrap();
     let proof = secret.prove(base, max_number_bits, &threshold).unwrap();
 
-    c.bench_function("hw_proof_verify_base256_max", |bench| {
+    c.bench_function("hw_proof_verify_base256 32 bits", |bench| {
         bench.iter(|| commitment.verify(&proof, &threshold))
     });
 }
+
+/// HashWires proof generation benchmark for base256 and a large issued value.
+pub fn hw_proof_verify_base256_64_bits(c: &mut Criterion) {
+    let max_number_bits = 64;
+    let base = 256;
+    let threshold = BigUint::from_str_radix("100", 10).unwrap();
+    let value = BigUint::from_bytes_be(&[1; 8]);
+
+    let mut rng = OsRng;
+    let mut seed = [0u8; 32];
+    rng.fill_bytes(&mut seed);
+    let secret = Secret::<Blake3>::gen(&seed, &value);
+
+    let commitment = secret.commit(base, max_number_bits).unwrap();
+    let proof = secret.prove(base, max_number_bits, &threshold).unwrap();
+
+    c.bench_function("hw_proof_verify_base256 64 bits", |bench| {
+        bench.iter(|| commitment.verify(&proof, &threshold))
+    });
+}
+
 
 /// HashWires proof generation benchmark for base256 and a small issued value.
 pub fn hw_proof_verify_base256_minimum_value(c: &mut Criterion) {
@@ -391,26 +470,32 @@ pub fn hw_proof_verify_base256_1million(c: &mut Criterion) {
 
 criterion_group!(
     hw_group,
-    hw_commitment_gen_base4,
-    hw_commitment_gen_base4_max,
-    hw_commitment_gen_base16,
-    hw_commitment_gen_base16_max,
-    hw_commitment_gen_base256_max,
-    hw_commitment_gen_base256_minimum_value,
-    hw_commitment_gen_base256_1million,
-    hw_proof_gen_base4,
-    hw_proof_gen_base4_max,
-    hw_proof_gen_base16,
-    hw_proof_gen_base16_max,
-    hw_proof_gen_base256_max,
-    hw_proof_gen_base256_minimum_value,
-    hw_proof_gen_base256_1million,
-    hw_proof_verify_base4,
-    hw_proof_verify_base4_max,
-    hw_proof_verify_base16,
-    hw_proof_verify_base16_max,
-    hw_proof_verify_base256_max,
-    hw_proof_verify_base256_minimum_value,
-    hw_proof_verify_base256_1million,
+    // hw_commitment_gen_base4,
+    // hw_commitment_gen_base4_max,
+    // hw_commitment_gen_base16,
+    // hw_commitment_gen_base16_max,
+    // hw_commitment_gen_base256_max,
+    // hw_commitment_gen_base256_minimum_value,
+    // hw_commitment_gen_base256_1million,
+    // hw_proof_gen_base4,
+    // hw_proof_gen_base4_max,
+    // hw_proof_gen_base16,
+    // hw_proof_gen_base256_minimum_value,
+    // hw_proof_gen_base256_1million,
+    // hw_proof_verify_base4,
+    // hw_proof_verify_base4_max,
+    // hw_proof_verify_base16,
+    hw_proof_verify_base16_64_bits,
+    hw_proof_verify_base16_32_bits,
+    hw_proof_gen_base16_64_bits,
+    hw_proof_gen_base16_32_bits,
+    
+    hw_proof_verify_base256_64_bits,
+    hw_proof_verify_base256_32_bits,
+    hw_proof_gen_base256_64_bits,
+    hw_proof_gen_base256_32_bits,
+    
+    // hw_proof_verify_base256_minimum_value,
+    // hw_proof_verify_base256_1million,
 );
 criterion_main!(hw_group);
